@@ -287,6 +287,7 @@
                             'line-color': '#94a3b8',
                             'target-arrow-color': '#94a3b8',
                             'curve-style': 'bezier',
+                            'control-point-step-size': 40,
                             'label': 'data(label)',
                             'font-size': '11px',
                             'text-rotation': 'autorotate',
@@ -299,8 +300,10 @@
                 layout: {
                     name: 'dagre',
                     rankDir: 'LR',
-                    nodeSep: 60,
-                    rankSep: 120,
+                    ranker: 'longest-path', // Better for avoiding single-line stacking
+                    nodeSep: 200,           // Massive vertical separation
+                    rankSep: 250,           // Good horizontal separation
+                    padding: 100,
                     animate: true,
                     animationDuration: 500
                 }
