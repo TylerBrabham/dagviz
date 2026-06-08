@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DAG Visualizer | Graph Tool for LeetCode & Algorithms</title>
+    <meta name="description" content="A powerful, interactive tool to visualize Directed Acyclic Graphs (DAGs). Perfect for LeetCode algorithm practice, topological sorting, and dependency mapping.">
+    <meta name="keywords" content="DAG, Directed Acyclic Graph, LeetCode, Visualization, Graph Theory, Topological Sort, Algorithms, Data Structures, Dependency Graph">
+    
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.26.0/cytoscape.min.js"></script>
+    <script src="https://unpkg.com/dagre@0.8.5/dist/dagre.min.js"></script>
+    <script src="https://unpkg.com/cytoscape-dagre@2.5.0/cytoscape-dagre.js"></script>
+    
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-body: #f1f5f9;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --accent: #f59e0b;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, system-ui, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        header {
+            background: var(--bg-card);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 380px;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .viewport {
+            flex: 1;
+            position: relative;
+            background: #ffffff;
+        }
+
+        #cy {
+            width: 100%;
+            height: 100%;
+        }
+
+        .card {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .card label {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--text-main);
+        }
+
+        .hint {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.85rem;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            background: #fafafa;
+            resize: vertical;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: #fff;
+        }
+
+        button {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.1s, background 0.2s;
+        }
+
+        button:hover { background: var(--primary-hover); }
+        button:active { transform: scale(0.98); }
+
+        .seo-content {
+            border-top: 1px solid var(--border);
+            padding-top: 1.5rem;
+            margin-top: auto;
+        }
+
+        .seo-content h2 {
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-main);
+        }
+
+        .seo-content p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .error {
+            color: #ef4444;
+            font-size: 0.75rem;
+            background: #fef2f2;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            display: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-container { flex-direction: column; }
+            .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
+            .viewport { height: 50vh; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>DAG Visualizer</h1>
+        <div class="hint">Interactive Directed Acyclic Graph Tool</div>
+    </header>
+
+    <div class="main-container">
+        <aside class="sidebar">
+            <div class="card">
+                <label for="edges">Edge Configuration</label>
+                <p class="hint">Input your DAG as a JSON list: <br><code>[source, target, weight]</code></p>
+                <textarea id="edges" spellcheck="false">[["A", "B", 1], ["B", "C", 2], ["A", "C", 4], ["C", "D", 1], ["B", "D", 5]]</textarea>
+                <div id="error-msg" class="error"></div>
+                <button onclick="renderGraph()">Render DAG</button>
+            </div>
+
+            <div class="seo-content">
+                <h2>Master Graph Algorithms</h2>
+                <p>
+                    Visualize complex <strong>Directed Acyclic Graphs (DAGs)</strong> directly in your browser. This tool is designed for software engineers and students tackling <strong>LeetCode</strong> problems, understanding <strong>Topological Sorting</strong>, and mapping out <strong>Dependency Chains</strong>.
+                </p>
+                <p>
+                    Whether you're debugging a task scheduler or studying for technical interviews, our <strong>Dagre-powered</strong> layout engine ensures your graph is always clean and easy to read.
+                </p>
+            </div>
+        </aside>
+
+        <main class="viewport">
+            <div id="cy"></div>
+        </main>
+    </div>
+
+    <script>
+        // Register the dagre layout
+        if (typeof cytoscapeDagre !== 'undefined') {
+            cytoscape.use(cytoscapeDagre);
+        }
+
+        let cy = null;
+
+        function renderGraph() {
+            const input = document.getElementById('edges').value;
+            const errorEl = document.getElementById('error-msg');
+            errorEl.style.display = 'none';
+
+            let edgesData;
+            try {
+                edgesData = JSON.parse(input);
+                if (!Array.isArray(edgesData)) throw new Error("Input must be an array of arrays");
+            } catch (e) {
+                errorEl.textContent = "Invalid format: " + e.message;
+                errorEl.style.display = 'block';
+                return;
+            }
+
+            const elements = [];
+            const nodes = new Set();
+
+            edgesData.forEach((edge, index) => {
+                if (!Array.isArray(edge) || edge.length < 2) return;
+                
+                const source = String(edge[0]);
+                const target = String(edge[1]);
+                const weight = edge.length > 2 ? edge[2] : '';
+
+                nodes.add(source);
+                nodes.add(target);
+
+                elements.push({
+                    data: {
+                        id: `e${index}`,
+                        source: source,
+                        target: target,
+                        label: String(weight)
+                    }
+                });
+            });
+
+            nodes.forEach(nodeId => {
+                elements.push({ data: { id: nodeId, label: nodeId } });
+            });
+
+            if (cy) {
+                cy.destroy();
+            }
+
+            cy = cytoscape({
+                container: document.getElementById('cy'),
+                elements: elements,
+                style: [
+                    {
+                        selector: 'node',
+                        style: {
+                            'label': 'data(label)',
+                            'text-valign': 'center',
+                            'text-halign': 'center',
+                            'background-color': '#4f46e5',
+                            'color': '#ffffff',
+                            'width': '50px',
+                            'height': '50px',
+                            'font-size': '14px',
+                            'font-weight': '600',
+                            'border-width': 0,
+                            'shadow-blur': 10,
+                            'shadow-color': '#cbd5e1',
+                            'shadow-opacity': 0.5
+                        }
+                    },
+                    {
+                        selector: 'edge',
+                        style: {
+                            'width': 2,
+                            'target-arrow-shape': 'triangle',
+                            'line-color': '#94a3b8',
+                            'target-arrow-color': '#94a3b8',
+                            'curve-style': 'bezier',
+                            'label': 'data(label)',
+                            'font-size': '11px',
+                            'text-rotation': 'autorotate',
+                            'text-margin-y': -12,
+                            'color': '#475569',
+                            'arrow-scale': 1.2
+                        }
+                    }
+                ],
+                layout: {
+                    name: 'dagre',
+                    rankDir: 'LR',
+                    nodeSep: 60,
+                    rankSep: 120,
+                    animate: true,
+                    animationDuration: 500
+                }
+            });
+        }
+
+        window.onload = renderGraph;
+    </script>
+</body>
+</html>
