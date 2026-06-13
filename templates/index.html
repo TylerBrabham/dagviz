@@ -147,9 +147,6 @@
             border: 1px solid rgba(0,0,0,0.05);
         }
 
-        .cell-1 { background-color: var(--grid-1); color: white; }
-        .cell-0 { background-color: var(--grid-0); color: #64748b; }
-
         .card {
             display: flex;
             flex-direction: column;
@@ -249,13 +246,13 @@
 
             <!-- Grid Controls -->
             <div id="grid-controls" class="card" style="display: none;">
-                <label for="grid-input">2D Matrix (0s and 1s)</label>
-                <p class="hint">Visualize islands, paths, and matrix problems.</p>
+                <label for="grid-input">2D Matrix (Numeric Values)</label>
+                <p class="hint">Visualize values with a color gradient based on min/max.</p>
                 <textarea id="grid-input" spellcheck="false">[
-  [1, 1, 0, 0, 0],
-  [1, 1, 0, 0, 0],
-  [0, 0, 1, 0, 0],
-  [0, 0, 0, 1, 1]
+  [1, 2, 3, 4, 5],
+  [2, 4, 6, 8, 10],
+  [3, 6, 9, 12, 15],
+  [4, 8, 12, 16, 20]
 ]</textarea>
                 <div id="grid-error" class="error"></div>
                 <button class="btn-primary" onclick="renderGrid()">Render Grid</button>
@@ -376,6 +373,23 @@
                 return;
             }
 
+            // Compute min and max values
+            let min = Infinity;
+            let max = -Infinity;
+            gridData.forEach(row => {
+                row.forEach(cell => {
+                    const val = Number(cell);
+                    if (!isNaN(val)) {
+                        if (val < min) min = val;
+                        if (val > max) max = val;
+                    }
+                });
+            });
+
+            // Handle edge case where all values are the same or no numeric values
+            if (min === Infinity) { min = 0; max = 1; }
+            if (min === max) { max = min + 1; }
+
             const rows = gridData.length;
             const cols = gridData[0].length;
 
@@ -385,8 +399,24 @@
             let html = '';
             gridData.forEach((row, r) => {
                 row.forEach((cell, c) => {
-                    const cellClass = cell == 1 ? 'cell-1' : 'cell-0';
-                    html += `<div class="grid-cell ${cellClass}" title="[${r}, ${c}]">${cell}</div>`;
+                    const val = Number(cell);
+                    let bgColor, textColor;
+
+                    if (isNaN(val)) {
+                        bgColor = 'var(--grid-0)';
+                        textColor = 'var(--text-main)';
+                    } else {
+                        const ratio = (val - min) / (max - min);
+                        // Interpolate between --grid-0 (#e2e8f0) and --primary (#4f46e5)
+                        // rgb(226, 232, 240) -> rgb(79, 70, 229)
+                        const red = Math.round(226 + ratio * (79 - 226));
+                        const green = Math.round(232 + ratio * (70 - 232));
+                        const blue = Math.round(240 + ratio * (229 - 240));
+                        bgColor = `rgb(${red}, ${green}, ${blue})`;
+                        textColor = ratio > 0.5 ? '#ffffff' : 'var(--text-main)';
+                    }
+
+                    html += `<div class="grid-cell" style="background-color: ${bgColor}; color: ${textColor};" title="[${r}, ${c}]">${cell}</div>`;
                 });
             });
             container.innerHTML = html;

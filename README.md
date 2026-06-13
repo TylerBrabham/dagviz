@@ -4,8 +4,9 @@ An interactive web application built with **FastAPI** and **Cytoscape.js** to vi
 
 ## 🚀 Features
 
-- **Interactive Rendering:** Input your edge list as a JSON array and see the graph update instantly.
-- **Smart Layout:** Uses the Dagre engine to automatically arrange nodes for maximum readability.
+- **DAG Rendering:** Input your edge list as a JSON array and see the graph update instantly.
+- **Grid Visualization:** Visualize 2D matrices with a dynamic color gradient based on cell values.
+- **Smart Layout:** Uses the Dagre engine to automatically arrange DAG nodes for maximum readability.
 - **Modern UI:** A clean, responsive design with a sidebar for configuration and a large viewport for the graph.
 - **SEO Optimized:** Built with accessibility and searchability in mind.
 
@@ -48,6 +49,7 @@ Open your browser and navigate to:
 
 ## 📊 Usage
 
+### DAG Visualizer
 Enter your edges in the sidebar using the following JSON format:
 ```json
 [
@@ -56,4 +58,15 @@ Enter your edges in the sidebar using the following JSON format:
   ["B", "C", 5]
 ]
 ```
-Click **"Render DAG"** to generate the visualization. The algorithm uses `longest-path` ranking to ensure nodes are spread out vertically, preventing edge overlap.
+Click **"Render DAG"** to generate the visualization.
+
+### Grid Visualizer
+Switch to the **Grid Visualizer** tab and enter a 2D matrix:
+```json
+[
+  [1, 2, 3],
+  [4, 5, 6],
+  [7, 8, 9]
+]
+```
+Click **"Render Grid"** to see a heat-map style visualization where colors are automatically calculated based on the range of values in your input.
